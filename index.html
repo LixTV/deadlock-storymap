@@ -1,284 +1,314 @@
-
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DEADLOCK — Story Map</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font-sans)}
-.wrap{padding:1rem 0;overflow-x:auto;min-width:0}
-.legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;font-size:11px;color:var(--color-text-secondary);align-items:center}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f8f8f6;color:#1a1a1a;padding:24px}
+
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px;font-size:11px;color:#555;align-items:center}
 .litem{display:flex;align-items:center;gap:5px}
 .ldot{width:10px;height:10px;border-radius:50%}
-.r-legend{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
-.rbadge{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:500}
-.r1{background:#EEEDFE;color:#3C3489}.r2{background:#E1F5EE;color:#085041}.r3{background:#FAEEDA;color:#633806}.r4{background:#F1EFE8;color:#444441}
 
-/* Epic header row */
-.epic-header{display:flex;gap:0;margin-bottom:0;min-width:max-content}
-.epic-cell{padding:8px 12px;font-size:12px;font-weight:500;border-radius:var(--border-radius-md) var(--border-radius-md) 0 0;margin-right:8px;cursor:pointer;user-select:none;display:flex;align-items:center;gap:6px;min-width:0;flex-shrink:0}
-.epic-cell .etag{font-size:10px;opacity:.7;font-weight:400}
-.epic-cell .chevron{font-size:10px;margin-left:auto;transition:transform .2s}
-.epic-cell.collapsed .chevron{transform:rotate(-90deg)}
+.r-legend{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.rbadge{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:600}
+.r1{background:#EEEDFE;color:#3C3489}
+.r2{background:#E1F5EE;color:#085041}
+.r3{background:#FAEEDA;color:#633806}
+.r4{background:#F1EFE8;color:#444441}
 
-/* UC row */
-.uc-row{display:flex;gap:8px;margin-bottom:0;min-width:max-content;background:var(--color-background-secondary);border-radius:0 var(--border-radius-md) 0 0;padding:6px 8px 0}
+.epic-block{margin-bottom:16px;min-width:max-content}
 
-/* UC column */
-.uc-col{flex-shrink:0;width:200px}
-.uc-pill{border-radius:var(--border-radius-md) var(--border-radius-md) 0 0;padding:6px 10px;font-size:11.5px;font-weight:500;line-height:1.3}
+.stag{display:inline-block;font-size:9.5px;padding:2px 6px;border-radius:3px;margin-bottom:3px;background:#ebebeb;color:#555;font-weight:500}
 
-/* Stories column */
-.stories-col{display:flex;flex-direction:column;gap:4px;padding:6px 8px 8px;background:var(--color-background-secondary);border-radius:0 0 var(--border-radius-md) var(--border-radius-md);width:200px;flex-shrink:0}
+.story-card{
+  border:1px solid #ddd;
+  border-radius:8px;
+  padding:8px 10px;
+  font-size:11px;
+  cursor:pointer;
+  transition:border-color .15s,background .15s;
+  line-height:1.45;
+  background:#ffffff;
+}
+.story-card:hover{border-color:#999;background:#f5f5f2}
+.story-card .stitle{font-weight:600;color:#1a1a1a;margin-bottom:3px;font-size:11.5px}
+.story-card .sdesc{color:#666;font-size:10.5px}
 
-.story-card{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:7px 9px;font-size:11px;cursor:pointer;transition:border-color .15s,background .15s;line-height:1.45}
-.story-card:hover{border-color:var(--color-border-secondary);background:var(--color-background-primary)}
-.story-card .stitle{font-weight:500;color:var(--color-text-primary);margin-bottom:2px}
-.story-card .sdesc{color:var(--color-text-secondary);font-size:10.5px}
-.stag{display:inline-block;font-size:9.5px;padding:1px 5px;border-radius:3px;margin-bottom:3px}
-
-/* Epic block container */
-.epic-block{margin-bottom:14px;min-width:max-content}
-.epic-content{border:0.5px solid var(--color-border-tertiary);border-radius:0 var(--border-radius-md) var(--border-radius-md) var(--border-radius-md);overflow:hidden}
-
-/* Modal */
-.modal-bg{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.35);z-index:200;align-items:center;justify-content:center}
+/* Modal overlay */
+.modal-bg{
+  display:none;
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  background:rgba(0,0,0,0.5);
+  z-index:999;
+  align-items:center;
+  justify-content:center;
+}
 .modal-bg.open{display:flex}
-.modal{background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);padding:1.25rem;max-width:360px;width:90%;position:relative;max-height:90vh;overflow-y:auto}
-.modal h3{font-size:14px;font-weight:500;margin-bottom:6px}
-.modal .sub{font-size:12px;color:var(--color-text-secondary);margin-bottom:10px}
-.modal p{font-size:13px;color:var(--color-text-primary);line-height:1.6;margin-bottom:8px}
-.modal .acc{font-size:12px;color:var(--color-text-secondary);background:var(--color-background-secondary);padding:8px 10px;border-radius:var(--border-radius-md);line-height:1.7}
-.modal .close-btn{position:absolute;top:10px;right:12px;font-size:16px;cursor:pointer;color:var(--color-text-secondary);background:none;border:none}
-.divider{border:none;border-top:0.5px solid var(--color-border-tertiary);margin:8px 0}
-.uc-badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:4px;margin-bottom:6px;font-weight:500}
+
+/* Modal box */
+.modal{
+  background:#ffffff;
+  border:1px solid #ccc;
+  border-radius:12px;
+  padding:20px;
+  max-width:400px;
+  width:92%;
+  position:relative;
+  max-height:85vh;
+  overflow-y:auto;
+  box-shadow:0 8px 32px rgba(0,0,0,0.18);
+}
+.modal-breadcrumb{font-size:10px;color:#888;margin-bottom:8px}
+.modal-tags{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.modal h3{font-size:15px;font-weight:600;margin-bottom:6px;color:#1a1a1a}
+.modal-divider{border:none;border-top:1px solid #eee;margin:10px 0}
+.modal-story{font-size:13px;color:#333;line-height:1.65;margin-bottom:10px}
+.modal-acc-box{
+  font-size:12px;
+  color:#444;
+  background:#f5f5f2;
+  border:1px solid #e8e8e4;
+  padding:10px 12px;
+  border-radius:8px;
+  line-height:1.75;
+}
+.modal-acc-title{font-size:11px;font-weight:600;color:#1a1a1a;display:block;margin-bottom:5px}
+.modal-close{
+  position:absolute;
+  top:12px;right:14px;
+  font-size:18px;
+  cursor:pointer;
+  color:#888;
+  background:none;
+  border:none;
+  line-height:1;
+  padding:2px 6px;
+}
+.modal-close:hover{color:#333}
 </style>
+</head>
+<body>
 
-<div class="wrap">
-<div class="legend">
-  <strong style="color:var(--color-text-primary);font-size:12px">DEADLOCK — Story Map</strong>
-  <div class="litem"><div class="ldot" style="background:#7F77DD"></div>Spieler A</div>
-  <div class="litem"><div class="ldot" style="background:#1D9E75"></div>Spieler B</div>
-  <div class="litem"><div class="ldot" style="background:#BA7517"></div>Beide</div>
-  <div class="litem"><div class="ldot" style="background:#888780"></div>System</div>
-  <span style="margin-left:auto;color:var(--color-text-tertiary);font-size:10.5px">Story-Karte anklicken für Details</span>
-</div>
-<div class="r-legend">
-  <span style="font-size:10.5px;color:var(--color-text-secondary)">Release:</span>
-  <span class="rbadge r1">MVP</span><span class="rbadge r2">Alpha</span><span class="rbadge r3">Beta</span><span class="rbadge r4">Post-Launch</span>
-</div>
-<div id="map"></div>
+<div style="overflow-x:auto;padding:4px 0">
+
+  <div class="legend">
+    <strong style="color:#1a1a1a;font-size:13px;margin-right:4px">DEADLOCK — Story Map</strong>
+    <div class="litem"><div class="ldot" style="background:#7F77DD"></div>Spieler A</div>
+    <div class="litem"><div class="ldot" style="background:#1D9E75"></div>Spieler B</div>
+    <div class="litem"><div class="ldot" style="background:#BA7517"></div>Beide</div>
+    <div class="litem"><div class="ldot" style="background:#888780"></div>System</div>
+    <span style="margin-left:auto;color:#aaa;font-size:10px">→ Karte anklicken für Details</span>
+  </div>
+
+  <div class="r-legend">
+    <span style="font-size:11px;color:#888;margin-right:2px">Release:</span>
+    <span class="rbadge r1">MVP</span>
+    <span class="rbadge r2">Alpha</span>
+    <span class="rbadge r3">Beta</span>
+    <span class="rbadge r4">Post-Launch</span>
+  </div>
+
+  <div id="map"></div>
+
 </div>
 
-<div class="modal-bg" id="mbg" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="modal"><button class="close-btn" onclick="document.getElementById('mbg').classList.remove('open')">✕</button><div id="mc"></div></div>
+<!-- Modal -->
+<div class="modal-bg" id="mbg" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="mc"></div>
+  </div>
 </div>
 
 <script>
 const EPICS = [
   {
-    id:"E1", label:"Hot-Seat Spielfluss", cls:"ea",
+    id:"E1", label:"Hot-Seat Spielfluss",
     bg:"#EEEDFE", border:"#AFA9EC", text:"#26215C", ucbg:"#CECBF6", uctext:"#26215C",
     usecases:[
-      {
-        id:"UC1.1", label:"Match initialisieren",
-        stories:[
-          {role:"Beide",rcls:"r1",title:"Schnellstart per Quick Play",text:"Als Spieler möchte ich ein Match sofort mit einer Zufalls-Stage starten, ohne lange Auswahl.",acc:["Quick-Play-Button auf Startscreen","Zufalls-Stage wird geladen","Match beginnt mit Spieler A zuerst"]},
-          {role:"Beide",rcls:"r1",title:"Stage manuell wählen",text:"Als Spieler möchte ich vor dem Match eine Stage aus der verfügbaren Liste wählen.",acc:["Stage-Picker zeigt freigeschaltete Stages","Preview-Thumbnail je Stage","Bestätigung startet Match"]},
-          {role:"Beide",rcls:"r2",title:"Stage-Auswahl im Set (Loser picks)",text:"Als Verlierer einer Runde möchte ich die nächste Stage bestimmen.",acc:["Loser picks → Winner picks → Loser picks","Ablauf im 3er-Set","Stage darf nicht wiederholt werden"]},
-        ]
-      },
-      {
-        id:"UC1.2", label:"Geräteübergabe",
-        stories:[
-          {role:"System",rcls:"r1",title:"Übergabe-Overlay anzeigen",text:"Als System möchte ich nach jeder Plan-Phase ein Übergabe-Overlay einblenden.",acc:["Spiel pausiert automatisch","'Gerät übergeben an Spieler B' angezeigt","Countdown-Ton"]},
-          {role:"Beide",rcls:"r1",title:"Bereit-Bestätigung beider Spieler",text:"Als Spieler möchte ich erst nach Bestätigung beider Spieler fortfahren.",acc:["Bereit-Button für A und B separat","Erst beide Taps → Freigabe","Verhindert unbeabsichtigten Start"]},
-        ]
-      },
-      {
-        id:"UC1.3", label:"Match beenden & Rematch",
-        stories:[
-          {role:"Beide",rcls:"r1",title:"Match-Ergebnis anzeigen",text:"Als Spieler möchte ich nach dem letzten Punkt klar sehen, wer das Match gewonnen hat.",acc:["Match-End-Screen","Punktestand final","Gewinner hervorgehoben"]},
-          {role:"Beide",rcls:"r2",title:"Rematch starten",text:"Als Spieler möchte ich nach dem Match sofort eine Revanche beginnen.",acc:["Rematch-Button direkt auf End-Screen","Gleiche Stage & Spieler","Stats werden addiert"]},
-        ]
-      }
+      { id:"UC1.1", label:"Match initialisieren", stories:[
+        {role:"Beide",rcls:"r1",title:"Schnellstart per Quick Play",text:"Als Spieler möchte ich ein Match sofort mit einer Zufalls-Stage starten, ohne lange Auswahl.",acc:["Quick-Play-Button auf Startscreen","Zufalls-Stage wird geladen","Match beginnt mit Spieler A zuerst"]},
+        {role:"Beide",rcls:"r1",title:"Stage manuell wählen",text:"Als Spieler möchte ich vor dem Match eine Stage aus der verfügbaren Liste wählen.",acc:["Stage-Picker zeigt freigeschaltete Stages","Preview-Thumbnail je Stage","Bestätigung startet Match"]},
+        {role:"Beide",rcls:"r2",title:"Stage-Auswahl im Set (Loser picks)",text:"Als Verlierer einer Runde möchte ich die nächste Stage bestimmen.",acc:["Loser picks → Winner picks → Loser picks","Ablauf im 3er-Set","Stage darf nicht wiederholt werden"]},
+      ]},
+      { id:"UC1.2", label:"Geräteübergabe", stories:[
+        {role:"System",rcls:"r1",title:"Übergabe-Overlay anzeigen",text:"Als System möchte ich nach jeder Plan-Phase ein Übergabe-Overlay einblenden.",acc:["Spiel pausiert automatisch","'Gerät übergeben an Spieler B' angezeigt","Countdown-Ton"]},
+        {role:"Beide",rcls:"r1",title:"Bereit-Bestätigung beider Spieler",text:"Als Spieler möchte ich erst nach Bestätigung beider Spieler fortfahren.",acc:["Bereit-Button für A und B separat","Erst beide Taps → Freigabe","Verhindert unbeabsichtigten Start"]},
+      ]},
+      { id:"UC1.3", label:"Match beenden & Rematch", stories:[
+        {role:"Beide",rcls:"r1",title:"Match-Ergebnis anzeigen",text:"Als Spieler möchte ich nach dem letzten Punkt klar sehen, wer das Match gewonnen hat.",acc:["Match-End-Screen","Punktestand final","Gewinner hervorgehoben"]},
+        {role:"Beide",rcls:"r2",title:"Rematch starten",text:"Als Spieler möchte ich nach dem Match sofort eine Revanche beginnen.",acc:["Rematch-Button direkt auf End-Screen","Gleiche Stage & Spieler","Stats werden addiert"]},
+      ]},
     ]
   },
   {
-    id:"E2", label:"Echo-System & Plan-Phase", cls:"eb",
+    id:"E2", label:"Echo-System & Plan-Phase",
     bg:"#E1F5EE", border:"#5DCAA5", text:"#04342C", ucbg:"#9FE1CB", uctext:"#04342C",
     usecases:[
-      {
-        id:"UC2.1", label:"Route aufzeichnen",
-        stories:[
-          {role:"Spieler A",rcls:"r1",title:"Bewegungen in Plan-Phase eingeben",text:"Als Spieler A möchte ich in 8,5 Sek. meine Route frei eingeben und automatisch aufzeichnen lassen.",acc:["EchoRecorder startet bei Phase-Beginn","x/y normalisiert 0..1, Keyframes per Tick","flush() am Phasenende"]},
-          {role:"Spieler A",rcls:"r1",title:"Sichtschutz-Screen für B",text:"Als System möchte ich Spieler B während Plan-Phase A durch einen schwarzen Overlay blockieren.",acc:["Schwarzes Overlay mit Countdown","Kein Touch-Durchgriff","B sieht exakt wann er wieder schauen darf"]},
-          {role:"Spieler B",rcls:"r1",title:"Plan-Phase B starten",text:"Als Spieler B möchte ich nach der Echo-Preview meine 8-Sek.-Konterroute eingeben.",acc:["2-Sek.-Echo-Preview vor Phase-Start","B kann nicht pausieren","Phasendauer 8,0 Sek."]},
-        ]
-      },
-      {
-        id:"UC2.2", label:"Echo anzeigen",
-        stories:[
-          {role:"Spieler B",rcls:"r1",title:"Gegner-Echo sehen",text:"Als Spieler B möchte ich das transparente Ghost-Sprite von A sehen, um meinen Konter zu planen.",acc:["Desaturierter Ghost-Sprite","Flackernde Animation","Echo bleibt während Plan-Phase B sichtbar"]},
-          {role:"System",rcls:"r2",title:"Echo mit Stage-Elementen interagieren lassen",text:"Als System möchte ich, dass Echos Schalter und Fallen in der Clash-Phase auslösen.",acc:["Echo-Kollisionen in Clash-Physik aktiv","StageLoader registriert Echo-Trigger","Konsistenz mit Echtzeit-Kollision"]},
-        ]
-      },
-      {
-        id:"UC2.3", label:"Route manipulieren (Tokens)",
-        stories:[
-          {role:"Spieler A",rcls:"r2",title:"Echo-Reset-Token nutzen",text:"Als Spieler möchte ich meine aufgezeichnete Route per Token zurücksetzen und neu planen.",acc:["Token nur in eigener Plan-Phase einsammelbar","Route wird geleert","Neu-Aufzeichnung startet sofort"]},
-          {role:"Spieler B",rcls:"r2",title:"Mirror-Token anwenden",text:"Als Spieler B möchte ich meine Route horizontal spiegeln, um A zu überraschen.",acc:["Mirror-Token auf Stage versteckt","Spiegelung bei Nutzung instant","Einmalig pro Runde"]},
-          {role:"Spieler A",rcls:"r2",title:"Freeze-Token einsetzen",text:"Als Spieler möchte ich das Echo des Gegners in der Clash-Phase für 1 Sek. einfrieren.",acc:["Freeze wirkt auf Gegner-Echo","Dauer: 1 Sekunde in Clash","Nur 1x pro Runde einsetzbar"]},
-        ]
-      }
+      { id:"UC2.1", label:"Route aufzeichnen", stories:[
+        {role:"Spieler A",rcls:"r1",title:"Bewegungen in Plan-Phase eingeben",text:"Als Spieler A möchte ich in 8,5 Sek. meine Route frei eingeben und automatisch aufzeichnen lassen.",acc:["EchoRecorder startet bei Phase-Beginn","x/y normalisiert 0..1, Keyframes per Tick","flush() am Phasenende"]},
+        {role:"System",rcls:"r1",title:"Sichtschutz-Screen für B",text:"Als System möchte ich Spieler B während Plan-Phase A durch einen schwarzen Overlay blockieren.",acc:["Schwarzes Overlay mit Countdown","Kein Touch-Durchgriff","B sieht exakt wann er wieder schauen darf"]},
+        {role:"Spieler B",rcls:"r1",title:"Plan-Phase B starten",text:"Als Spieler B möchte ich nach der Echo-Preview meine 8-Sek.-Konterroute eingeben.",acc:["2-Sek.-Echo-Preview vor Phase-Start","B kann nicht pausieren","Phasendauer 8,0 Sek."]},
+      ]},
+      { id:"UC2.2", label:"Echo anzeigen", stories:[
+        {role:"Spieler B",rcls:"r1",title:"Gegner-Echo sehen",text:"Als Spieler B möchte ich das transparente Ghost-Sprite von A sehen, um meinen Konter zu planen.",acc:["Desaturierter Ghost-Sprite","Flackernde Animation","Echo bleibt während Plan-Phase B sichtbar"]},
+        {role:"System",rcls:"r2",title:"Echo mit Stage-Elementen interagieren lassen",text:"Als System möchte ich, dass Echos Schalter und Fallen in der Clash-Phase auslösen.",acc:["Echo-Kollisionen in Clash-Physik aktiv","StageLoader registriert Echo-Trigger","Konsistenz mit Echtzeit-Kollision"]},
+      ]},
+      { id:"UC2.3", label:"Route manipulieren (Tokens)", stories:[
+        {role:"Spieler A",rcls:"r2",title:"Echo-Reset-Token nutzen",text:"Als Spieler möchte ich meine aufgezeichnete Route per Token zurücksetzen und neu planen.",acc:["Token nur in eigener Plan-Phase einsammelbar","Route wird geleert","Neu-Aufzeichnung startet sofort"]},
+        {role:"Spieler B",rcls:"r2",title:"Mirror-Token anwenden",text:"Als Spieler B möchte ich meine Route horizontal spiegeln, um A zu überraschen.",acc:["Mirror-Token auf Stage versteckt","Spiegelung bei Nutzung instant","Einmalig pro Runde"]},
+        {role:"Spieler A",rcls:"r2",title:"Freeze-Token einsetzen",text:"Als Spieler möchte ich das Echo des Gegners in der Clash-Phase für 1 Sek. einfrieren.",acc:["Freeze wirkt auf Gegner-Echo","Dauer: 1 Sekunde in Clash","Nur 1x pro Runde einsetzbar"]},
+      ]},
     ]
   },
   {
-    id:"E3", label:"Clash-Phase & Auflösung", cls:"ec",
+    id:"E3", label:"Clash-Phase & Auflösung",
     bg:"#FAEEDA", border:"#EF9F27", text:"#412402", ucbg:"#FAC775", uctext:"#412402",
     usecases:[
-      {
-        id:"UC3.1", label:"Clash simulieren",
-        stories:[
-          {role:"Beide",rcls:"r1",title:"Beide Routen simultan abspielen",text:"Als beide Spieler möchten wir in der Clash-Phase gemeinsam live sehen, wie beide Routen ablaufen.",acc:["Kein Input möglich","Reine Spectator-Phase","Physik-Interaktion beider Routen aktiv"]},
-          {role:"Beide",rcls:"r1",title:"Ergebnis der Clash-Phase sehen",text:"Als Spieler möchte ich nach der Clash-Phase sofort wissen, wer den Punkt gewonnen hat.",acc:["Sieger klar hervorgehoben","Score +1 animiert","Kurze Resolve-Phase (3 Sek.)"]},
-        ]
-      },
-      {
-        id:"UC3.2", label:"Rundenfortschritt verwalten",
-        stories:[
-          {role:"Beide",rcls:"r1",title:"Best-of-5 Rundenstand verfolgen",text:"Als Spieler möchte ich jederzeit den aktuellen Punktestand sehen.",acc:["HUD zeigt Score A vs B","Best-of-5: Sieg bei 3 Punkten","Rundenanzahl sichtbar"]},
-          {role:"Beide",rcls:"r2",title:"Nächste Runde nahtlos starten",text:"Als Spieler möchte ich nach Resolve direkt in die nächste Runde gehen, ohne Wartezeit.",acc:["Automatischer Übergang nach 3 Sek.","Rollen bleiben bis Match-Ende gleich","Phase FSM: resolve → planA"]},
-        ]
-      }
+      { id:"UC3.1", label:"Clash simulieren", stories:[
+        {role:"Beide",rcls:"r1",title:"Beide Routen simultan abspielen",text:"Als beide Spieler möchten wir in der Clash-Phase gemeinsam live sehen, wie beide Routen ablaufen.",acc:["Kein Input möglich","Reine Spectator-Phase","Physik-Interaktion beider Routen aktiv"]},
+        {role:"Beide",rcls:"r1",title:"Ergebnis der Clash-Phase sehen",text:"Als Spieler möchte ich nach der Clash-Phase sofort wissen, wer den Punkt gewonnen hat.",acc:["Sieger klar hervorgehoben","Score +1 animiert","Kurze Resolve-Phase (3 Sek.)"]},
+      ]},
+      { id:"UC3.2", label:"Rundenfortschritt verwalten", stories:[
+        {role:"Beide",rcls:"r1",title:"Best-of-5 Rundenstand verfolgen",text:"Als Spieler möchte ich jederzeit den aktuellen Punktestand sehen.",acc:["HUD zeigt Score A vs B","Best-of-5: Sieg bei 3 Punkten","Rundenanzahl sichtbar"]},
+        {role:"Beide",rcls:"r2",title:"Nächste Runde nahtlos starten",text:"Als Spieler möchte ich nach Resolve direkt in die nächste Runde gehen, ohne Wartezeit.",acc:["Automatischer Übergang nach 3 Sek.","Rollen bleiben bis Match-Ende gleich","Phase FSM: resolve → planA"]},
+      ]},
     ]
   },
   {
-    id:"E4", label:"Deadlock-Mechanik", cls:"ed",
+    id:"E4", label:"Deadlock-Mechanik",
     bg:"#FCEBEB", border:"#E24B4A", text:"#501313", ucbg:"#F7C1C1", uctext:"#501313",
     usecases:[
-      {
-        id:"UC4.1", label:"Deadlock erkennen",
-        stories:[
-          {role:"System",rcls:"r1",title:"Gegenseitige Blockade detektieren",text:"Als System möchte ich einen Deadlock tick-genau erkennen, wenn beide Pfade sich gegenseitig blockieren.",acc:["DeadlockDetector prüft simulate(framesA/B)","overlaps(posA[t+1], posB[t]) && overlaps(posB[t+1], posA[t])","Gibt boolean zurück"]},
-          {role:"Beide",rcls:"r1",title:"Deadlock visuell erleben",text:"Als Spieler möchte ich den Deadlock-Moment sofort spüren.",acc:["Bildschirm blinkt rot","Kurzer Crash-Cut-Sound","Beide Figuren eingefroren in kontrastierender Pose"]},
-        ]
-      },
-      {
-        id:"UC4.2", label:"Penalty-Runde durchführen",
-        stories:[
-          {role:"Beide",rcls:"r1",title:"Route in Penalty verlängern",text:"Als Spieler möchte ich in der Penalty-Runde meine Route einmalig um 2 Sek. verlängern.",acc:["5 Sek. Penalty-Zeit","Einmaliges 2-Sek.-Extend pro Spieler","Wer zuerst Ziel erreicht gewinnt den Punkt"]},
-          {role:"Beide",rcls:"r3",title:"Deadlock-Bonus erhalten",text:"Als Spieler möchte ich für das Auflösen eines Deadlocks eine Sonderwertung erhalten.",acc:["Deadlock-Bonus im Rundenscreen sichtbar","Balancing-abhängige Aktivierung","Optional: deaktivierbar in Settings"]},
-        ]
-      }
+      { id:"UC4.1", label:"Deadlock erkennen", stories:[
+        {role:"System",rcls:"r1",title:"Gegenseitige Blockade detektieren",text:"Als System möchte ich einen Deadlock tick-genau erkennen, wenn beide Pfade sich gegenseitig blockieren.",acc:["DeadlockDetector prüft simulate(framesA/B)","overlaps(posA[t+1], posB[t]) && overlaps(posB[t+1], posA[t])","Gibt boolean zurück"]},
+        {role:"Beide",rcls:"r1",title:"Deadlock visuell erleben",text:"Als Spieler möchte ich den Deadlock-Moment sofort spüren.",acc:["Bildschirm blinkt rot","Kurzer Crash-Cut-Sound","Beide Figuren eingefroren in kontrastierender Pose"]},
+      ]},
+      { id:"UC4.2", label:"Penalty-Runde durchführen", stories:[
+        {role:"Beide",rcls:"r1",title:"Route in Penalty verlängern",text:"Als Spieler möchte ich in der Penalty-Runde meine Route einmalig um 2 Sek. verlängern.",acc:["5 Sek. Penalty-Zeit","Einmaliges 2-Sek.-Extend pro Spieler","Wer zuerst Ziel erreicht gewinnt den Punkt"]},
+        {role:"Beide",rcls:"r3",title:"Deadlock-Bonus erhalten",text:"Als Spieler möchte ich für das Auflösen eines Deadlocks eine Sonderwertung erhalten.",acc:["Deadlock-Bonus im Rundenscreen sichtbar","Balancing-abhängige Aktivierung","Optional: deaktivierbar in Settings"]},
+      ]},
     ]
   },
   {
-    id:"E5", label:"Level & Stage System", cls:"ee",
+    id:"E5", label:"Level & Stage System",
     bg:"#E6F1FB", border:"#85B7EB", text:"#042C53", ucbg:"#B5D4F4", uctext:"#042C53",
     usecases:[
-      {
-        id:"UC5.1", label:"Tutorial absolvieren",
-        stories:[
-          {role:"Beide",rcls:"r1",title:"Zone 1 spielen (Training Grounds)",text:"Als neuer Spieler möchte ich in 5 einfachen Stages Echo-System und Clash-Phase lernen.",acc:["Keine Fallen in Zone 1","Eingebettete Tooltips","KI-Gegner im Solo-Tutorial verfügbar"]},
-          {role:"Beide",rcls:"r2",title:"Zone 2 freischalten (The Grid)",text:"Als Spieler möchte ich Schalter, Plattformen und erste Power-Tokens kennenlernen.",acc:["8 Stages","Symmetrische Layouts","Deadlock-Mechanik wird eingeführt"]},
-        ]
-      },
-      {
-        id:"UC5.2", label:"Kompetitiv spielen",
-        stories:[
-          {role:"Beide",rcls:"r2",title:"Zone 3 meistern (Interference)",text:"Als erfahrener Spieler möchte ich asymmetrische Stages mit aktiven Modifikatoren spielen.",acc:["10 Stages","Gravitation, Spiegel, Portale aktiv","Taktische Tiefe stark erhöht"]},
-          {role:"Beide",rcls:"r3",title:"Ranked Arena betreten",text:"Als kompetitiver Spieler möchte ich mit lokalem ELO spielen.",acc:["∞ Stage-Rotation","Wöchentliche neue Stage","Turnierformat: 8P Bracket geplant"]},
-        ]
-      },
-      {
-        id:"UC5.3", label:"Stage teilen & entdecken",
-        stories:[
-          {role:"Beide",rcls:"r4",title:"Eigene Stage als Code exportieren",text:"Als Creator möchte ich meine Stage als 6-stelligen Code teilen.",acc:["Stage-Editor generiert Code","Code-Export per Clipboard","Import durch Code-Eingabe im Stage-Picker"]},
-          {role:"Beide",rcls:"r4",title:"Community-Stage bewerten",text:"Als Spieler möchte ich Community-Stages bewerten und Featured Stages entdecken.",acc:["Bewertungssystem (Daumen)","Featured-Stage-Auswahl durch Votes","Wöchentliche Rotation Featured Stages"]},
-        ]
-      }
+      { id:"UC5.1", label:"Tutorial absolvieren", stories:[
+        {role:"Beide",rcls:"r1",title:"Zone 1 spielen (Training Grounds)",text:"Als neuer Spieler möchte ich in 5 einfachen Stages Echo-System und Clash-Phase lernen.",acc:["Keine Fallen in Zone 1","Eingebettete Tooltips","KI-Gegner im Solo-Tutorial verfügbar"]},
+        {role:"Beide",rcls:"r2",title:"Zone 2 freischalten (The Grid)",text:"Als Spieler möchte ich Schalter, Plattformen und erste Power-Tokens kennenlernen.",acc:["8 Stages","Symmetrische Layouts","Deadlock-Mechanik wird eingeführt"]},
+      ]},
+      { id:"UC5.2", label:"Kompetitiv spielen", stories:[
+        {role:"Beide",rcls:"r2",title:"Zone 3 meistern (Interference)",text:"Als erfahrener Spieler möchte ich asymmetrische Stages mit aktiven Modifikatoren spielen.",acc:["10 Stages","Gravitation, Spiegel, Portale aktiv","Taktische Tiefe stark erhöht"]},
+        {role:"Beide",rcls:"r3",title:"Ranked Arena betreten",text:"Als kompetitiver Spieler möchte ich mit lokalem ELO spielen.",acc:["∞ Stage-Rotation","Wöchentliche neue Stage","Turnierformat: 8P Bracket geplant"]},
+      ]},
+      { id:"UC5.3", label:"Stage teilen & entdecken", stories:[
+        {role:"Beide",rcls:"r4",title:"Eigene Stage als Code exportieren",text:"Als Creator möchte ich meine Stage als 6-stelligen Code teilen.",acc:["Stage-Editor generiert Code","Code-Export per Clipboard","Import durch Code-Eingabe im Stage-Picker"]},
+        {role:"Beide",rcls:"r4",title:"Community-Stage bewerten",text:"Als Spieler möchte ich Community-Stages bewerten und Featured Stages entdecken.",acc:["Bewertungssystem (Daumen)","Featured-Stage-Auswahl durch Votes","Wöchentliche Rotation Featured Stages"]},
+      ]},
     ]
   },
   {
-    id:"E6", label:"Profil & Statistiken", cls:"ef",
+    id:"E6", label:"Profil & Statistiken",
     bg:"#EAF3DE", border:"#97C459", text:"#173404", ucbg:"#C0DD97", uctext:"#173404",
     usecases:[
-      {
-        id:"UC6.1", label:"Spielerprofil verwalten",
-        stories:[
-          {role:"Beide",rcls:"r2",title:"Lokales Profil anlegen",text:"Als Spieler möchte ich ein Profil mit Namen anlegen – ohne Account.",acc:["Profilname frei wählbar","localStorage-Persistenz","Kein Account nötig, optional erweiterbar"]},
-          {role:"Beide",rcls:"r3",title:"ELO-Rating einsehen",text:"Als Spieler möchte ich mein lokales ELO-Rating sehen und nachverfolgen.",acc:["ELO auf Gerät gespeichert","Saison-Reset geplant","Anzeige im Ranked-Bereich"]},
-        ]
-      },
-      {
-        id:"UC6.2", label:"Statistiken auswerten",
-        stories:[
-          {role:"Beide",rcls:"r2",title:"Match-Stats nach Spiel sehen",text:"Als Spieler möchte ich nach dem Match Wins, Win-Rate und Lieblings-Stage sehen.",acc:["Stats-Overlay auf End-Screen","Kumulativ über Matches","Kein Cloud-Sync nötig"]},
-          {role:"Beide",rcls:"r3",title:"Langzeit-Performance verfolgen",text:"Als Spieler möchte ich meine Win-Rate über die Zeit beobachten.",acc:["Grafik letzte 10 Matches","Win-Rate-Trend","Lieblings-Stage + meistgespielte Stage"]},
-        ]
-      }
+      { id:"UC6.1", label:"Spielerprofil verwalten", stories:[
+        {role:"Beide",rcls:"r2",title:"Lokales Profil anlegen",text:"Als Spieler möchte ich ein Profil mit Namen anlegen – ohne Account.",acc:["Profilname frei wählbar","localStorage-Persistenz","Kein Account nötig, optional erweiterbar"]},
+        {role:"Beide",rcls:"r3",title:"ELO-Rating einsehen",text:"Als Spieler möchte ich mein lokales ELO-Rating sehen und nachverfolgen.",acc:["ELO auf Gerät gespeichert","Saison-Reset geplant","Anzeige im Ranked-Bereich"]},
+      ]},
+      { id:"UC6.2", label:"Statistiken auswerten", stories:[
+        {role:"Beide",rcls:"r2",title:"Match-Stats nach Spiel sehen",text:"Als Spieler möchte ich nach dem Match Wins, Win-Rate und Lieblings-Stage sehen.",acc:["Stats-Overlay auf End-Screen","Kumulativ über Matches","Kein Cloud-Sync nötig"]},
+        {role:"Beide",rcls:"r3",title:"Langzeit-Performance verfolgen",text:"Als Spieler möchte ich meine Win-Rate über die Zeit beobachten.",acc:["Grafik letzte 10 Matches","Win-Rate-Trend","Lieblings-Stage + meistgespielte Stage"]},
+      ]},
     ]
   },
 ];
 
+function closeModal(){
+  document.getElementById('mbg').classList.remove('open');
+}
+
 function storyModal(s, ucLabel, epicLabel){
   const rl = s.rcls==='r1'?'MVP':s.rcls==='r2'?'Alpha':s.rcls==='r3'?'Beta':'Post-Launch';
-  document.getElementById('mc').innerHTML=`
-    <div style="font-size:10px;color:var(--color-text-secondary);margin-bottom:6px">${epicLabel} → ${ucLabel}</div>
-    <div style="display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap">
-      <span class="stag" style="background:var(--color-background-secondary);color:var(--color-text-secondary)">${s.role}</span>
-      <span class="rbadge ${s.rcls}" style="margin-left:auto">${rl}</span>
+  const rColors = {r1:{bg:'#EEEDFE',col:'#3C3489'},r2:{bg:'#E1F5EE',col:'#085041'},r3:{bg:'#FAEEDA',col:'#633806'},r4:{bg:'#F1EFE8',col:'#444441'}};
+  const rc = rColors[s.rcls];
+  document.getElementById('mc').innerHTML = `
+    <div class="modal-breadcrumb">${epicLabel} → ${ucLabel}</div>
+    <div class="modal-tags">
+      <span style="display:inline-block;font-size:10px;padding:2px 8px;border-radius:4px;background:#ebebeb;color:#555;font-weight:500">${s.role}</span>
+      <span style="display:inline-block;font-size:10px;padding:2px 8px;border-radius:4px;background:${rc.bg};color:${rc.col};font-weight:600;margin-left:auto">${rl}</span>
     </div>
     <h3>${s.title}</h3>
-    <hr class="divider">
-    <p>${s.text}</p>
-    <div class="acc"><strong style="font-size:11px;display:block;margin-bottom:4px">Akzeptanzkriterien</strong>${s.acc.map(a=>'→ '+a).join('<br>')}</div>
+    <hr class="modal-divider">
+    <p class="modal-story">${s.text}</p>
+    <div class="modal-acc-box">
+      <span class="modal-acc-title">Akzeptanzkriterien</span>
+      ${s.acc.map(a=>`<div style="padding:2px 0;color:#333">→ ${a}</div>`).join('')}
+    </div>
   `;
   document.getElementById('mbg').classList.add('open');
 }
 
 const map = document.getElementById('map');
-EPICS.forEach(ep=>{
+
+EPICS.forEach(ep => {
   const block = document.createElement('div');
-  block.className='epic-block';
+  block.className = 'epic-block';
 
   // Epic header
   const hdr = document.createElement('div');
-  hdr.style.cssText=`display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:var(--border-radius-md) var(--border-radius-md) 0 0;background:${ep.bg};border:0.5px solid ${ep.border};cursor:pointer;user-select:none`;
-  hdr.innerHTML=`<span style="font-size:10px;color:${ep.text};opacity:.7">${ep.id}</span><span style="font-size:12px;font-weight:500;color:${ep.text}">${ep.label}</span><span style="font-size:10px;color:${ep.text};margin-left:6px" class="chv">▾</span>`;
+  hdr.style.cssText = `display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:8px 8px 0 0;background:${ep.bg};border:1px solid ${ep.border};border-bottom:none;cursor:pointer;user-select:none`;
+  hdr.innerHTML = `
+    <span style="font-size:10px;color:${ep.text};opacity:.65">${ep.id}</span>
+    <span style="font-size:12px;font-weight:600;color:${ep.text}">${ep.label}</span>
+    <span style="font-size:11px;color:${ep.text};margin-left:8px" class="chv">▾</span>
+  `;
 
+  // Content wrapper
   const content = document.createElement('div');
-  content.style.cssText=`border:0.5px solid ${ep.border};border-radius:0 var(--border-radius-md) var(--border-radius-md) var(--border-radius-md);overflow:hidden`;
+  content.style.cssText = `border:1px solid ${ep.border};border-radius:0 8px 8px 8px;overflow:hidden`;
 
-  // UC + Stories grid
+  // UC columns row
   const ucRow = document.createElement('div');
-  ucRow.style.cssText=`display:flex;gap:0;min-width:max-content`;
+  ucRow.style.cssText = `display:flex;gap:0;min-width:max-content`;
 
-  ep.usecases.forEach((uc,ui)=>{
+  ep.usecases.forEach((uc, ui) => {
     const col = document.createElement('div');
-    col.style.cssText=`flex-shrink:0;display:flex;flex-direction:column;border-right:${ui<ep.usecases.length-1?'0.5px solid '+ep.border:'none'}`;
+    const isLast = ui === ep.usecases.length - 1;
+    col.style.cssText = `flex-shrink:0;display:flex;flex-direction:column;${isLast ? '' : 'border-right:1px solid '+ep.border}`;
 
-    // UC pill
+    // UC label
     const pill = document.createElement('div');
-    pill.style.cssText=`background:${ep.ucbg};padding:7px 10px;font-size:11px;font-weight:500;color:${ep.uctext};line-height:1.3;min-width:220px`;
-    pill.innerHTML=`<div style="font-size:9.5px;opacity:.7;margin-bottom:1px">${uc.id}</div>${uc.label}`;
+    pill.style.cssText = `background:${ep.ucbg};padding:8px 10px;font-size:11px;font-weight:600;color:${ep.uctext};line-height:1.3;min-width:220px`;
+    pill.innerHTML = `<div style="font-size:9px;opacity:.6;margin-bottom:2px;font-weight:400">${uc.id}</div>${uc.label}`;
     col.appendChild(pill);
 
     // Stories
     const sWrap = document.createElement('div');
-    sWrap.style.cssText=`display:flex;flex-direction:column;gap:5px;padding:7px 8px;background:var(--color-background-primary);flex:1;min-width:220px`;
-    uc.stories.forEach(s=>{
+    sWrap.style.cssText = `display:flex;flex-direction:column;gap:5px;padding:8px;background:#ffffff;flex:1;min-width:220px`;
+
+    uc.stories.forEach(s => {
       const card = document.createElement('div');
-      card.className='story-card';
-      const rl=s.rcls==='r1'?'MVP':s.rcls==='r2'?'Alpha':s.rcls==='r3'?'Beta':'Post-Launch';
-      card.innerHTML=`
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
-          <span class="stag" style="background:var(--color-background-secondary);color:var(--color-text-secondary)">${s.role}</span>
-          <span class="rbadge ${s.rcls}">${rl}</span>
+      card.className = 'story-card';
+      const rl = s.rcls==='r1'?'MVP':s.rcls==='r2'?'Alpha':s.rcls==='r3'?'Beta':'Post-Launch';
+      const rColors = {r1:{bg:'#EEEDFE',col:'#3C3489'},r2:{bg:'#E1F5EE',col:'#085041'},r3:{bg:'#FAEEDA',col:'#633806'},r4:{bg:'#F1EFE8',col:'#444441'}};
+      const rc = rColors[s.rcls];
+      card.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span class="stag">${s.role}</span>
+          <span style="font-size:9.5px;padding:1px 6px;border-radius:3px;background:${rc.bg};color:${rc.col};font-weight:600">${rl}</span>
         </div>
         <div class="stitle">${s.title}</div>
-        <div class="sdesc">${s.text.substring(0,70)}…</div>
+        <div class="sdesc">${s.text.substring(0,72)}…</div>
       `;
-      card.onclick=()=>storyModal(s, uc.label, ep.label);
+      card.onclick = () => storyModal(s, uc.label, ep.label);
       sWrap.appendChild(card);
     });
+
     col.appendChild(sWrap);
     ucRow.appendChild(col);
   });
@@ -288,12 +318,17 @@ EPICS.forEach(ep=>{
   block.appendChild(content);
 
   // Collapse toggle
-  hdr.onclick=()=>{
-    const open=content.style.display!=='none';
-    content.style.display=open?'none':'';
-    hdr.querySelector('.chv').textContent=open?'▸':'▾';
+  hdr.onclick = () => {
+    const isOpen = content.style.display !== 'none';
+    content.style.display = isOpen ? 'none' : '';
+    hdr.querySelector('.chv').textContent = isOpen ? '▸' : '▾';
   };
 
   map.appendChild(block);
+  const gap = document.createElement('div');
+  gap.style.height = '10px';
+  map.appendChild(gap);
 });
 </script>
+</body>
+</html>
